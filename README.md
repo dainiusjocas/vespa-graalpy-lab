@@ -118,13 +118,44 @@ After adding jars to the container directly:
 
 Overall follow the guidelines from [here](https://docs.vespa.ai/en/components/bundles.html#add-jni-code-to-global-classpath):
 - Create a separate directory for graalpy dependencies.
+```shell
+docker exec -it -u root vespa mkdir /opt/vespa/lib/graalpy
+docker exec -it -u root vespa chown vespa /opt/vespa/lib/graalpy
+```
 - Copy all the jars from VAP `dependencies` dir to the container.
+
+```shell
+docker cp ~/.m2/repository/org/graalvm/python/python-language/24.1.1/python-language-24.1.1.jar vespa:/opt/vespa/lib/graalpy
+docker cp dependencies/bcpkix-jdk18on-1.78.1.jar vespa:/opt/vespa/lib/graalpy
+docker cp dependencies/bcutil-jdk18on-1.78.1.jar vespa:/opt/vespa/lib/graalpy
+docker cp dependencies/collections-24.1.1.jar vespa:/opt/vespa/lib/graalpy
+docker cp dependencies/icu4j-24.1.1.jar vespa:/opt/vespa/lib/graalpy
+docker cp dependencies/jniutils-24.1.1.jar vespa:/opt/vespa/lib/graalpy
+docker cp dependencies/json-24.1.1.jar vespa:/opt/vespa/lib/graalpy
+docker cp dependencies/llvm-api-24.1.1.jar vespa:/opt/vespa/lib/graalpy
+docker cp dependencies/nativebridge-24.1.1.jar vespa:/opt/vespa/lib/graalpy
+docker cp dependencies/nativeimage-24.1.1.jar vespa:/opt/vespa/lib/graalpy
+docker cp dependencies/polyglot-24.1.1.jar vespa:/opt/vespa/lib/graalpy
+docker cp dependencies/profiler-tool-24.1.1.jar vespa:/opt/vespa/lib/graalpy
+docker cp dependencies/truffle-nfi-24.1.1.jar vespa:/opt/vespa/lib/graalpy
+docker cp dependencies/truffle-nfi-libffi-24.1.1.jar vespa:/opt/vespa/lib/graalpy
+docker cp dependencies/truffle-runtime-24.1.1.jar vespa:/opt/vespa/lib/graalpy
+docker cp dependencies/word-24.1.1.jar vespa:/opt/vespa/lib/graalpy
+docker cp dependencies/xz-24.1.1.jar vespa:/opt/vespa/lib/graalpy
+docker cp dependencies/python-resources-24.1.1.jar vespa:/opt/vespa/lib/graalpy
+docker cp dependencies/regex-24.1.1.jar vespa:/opt/vespa/lib/graalpy
+docker cp dependencies/truffle-api-24.1.1.jar vespa:/opt/vespa/lib/graalpy
+docker cp dependencies/truffle-compiler-24.1.1.jar vespa:/opt/vespa/lib/graalpy
+docker cp dependencies/truffle-enterprise-24.1.1.jar vespa:/opt/vespa/lib/graalpy
+```
+
 - Make sure that vespa user has read rights.
-- Create a dir `mkdir  /opt/vespa/.cache` and `chown vespa  /opt/vespa/.cache`.
+- Create a dir `docker exec -it -u root vespa mkdir /opt/vespa/.cache` and `docker exec -it -u root vespa chown vespa /opt/vespa/.cache`.
+- Restart container `docker exec -it vespa sh -c "/opt/vespa/bin/vespa-stop-services && /opt/vespa/bin/vespa-start-services"`
 
 And it works!!!!!
 
-Here are all dependencies needed for graalvm.
+Here are all dependencies needed for graalvm refactored so that they are included in the VAP.
 ```xml
         <dependency>
             <groupId>org.graalvm.python</groupId>
