@@ -22,7 +22,6 @@
             <groupId>org.graalvm.polyglot</groupId>
             <artifactId>polyglot</artifactId>
             <version>24.1.1</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.graalvm.polyglot</groupId>
@@ -52,24 +51,24 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.graalvm.python</groupId>
-                <artifactId>graalpy-maven-plugin</artifactId>
-                <version>24.1.1</version>
-                <executions>
-                    <execution>
-                        <configuration>
-                            <packages>
-                                <!-- Select Python packages to install via pip. -->
-                                <package>pyfiglet==1.0.2</package>
-                            </packages>
-                        </configuration>
-                        <goals>
-                            <goal>process-graalpy-resources</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+<!--            <plugin>-->
+<!--                <groupId>org.graalvm.python</groupId>-->
+<!--                <artifactId>graalpy-maven-plugin</artifactId>-->
+<!--                <version>24.1.1</version>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <configuration>-->
+<!--                            <packages>-->
+<!--                                &lt;!&ndash; Select Python packages to install via pip. &ndash;&gt;-->
+<!--                                <package>pyfiglet==1.0.2</package>-->
+<!--                            </packages>-->
+<!--                        </configuration>-->
+<!--                        <goals>-->
+<!--                            <goal>process-graalpy-resources</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -111,6 +110,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <failOnWarnings>true</failOnWarnings>
+                    <importPackage>org.graalvm.polyglot</importPackage>
                 </configuration>
             </plugin>
             <plugin>

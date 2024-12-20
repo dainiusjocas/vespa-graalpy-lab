@@ -2,6 +2,13 @@
 <!-- Copyright Vespa.ai. Licensed under the terms of the Apache 2.0 license. See LICENSE in the project root. -->
 <services version="1.0">
 
+    <config name="search.config.qr-start">
+        <jdisc>
+            <classpath_extra>/opt/vespa/lib/graalpy/bcpkix-jdk18on-1.78.1.jar:/opt/vespa/lib/graalpy/bcprov-jdk18on-1.78.1.jar:/opt/vespa/lib/graalpy/bcutil-jdk18on-1.78.1.jar:/opt/vespa/lib/graalpy/collections-24.1.1.jar:/opt/vespa/lib/graalpy/icu4j-24.1.1.jar:/opt/vespa/lib/graalpy/jniutils-24.1.1.jar:/opt/vespa/lib/graalpy/json-24.1.1.jar:/opt/vespa/lib/graalpy/llvm-api-24.1.1.jar:/opt/vespa/lib/graalpy/nativebridge-24.1.1.jar:/opt/vespa/lib/graalpy/nativeimage-24.1.1.jar:/opt/vespa/lib/graalpy/polyglot-24.1.1.jar:/opt/vespa/lib/graalpy/profiler-tool-24.1.1.jar:/opt/vespa/lib/graalpy/truffle-nfi-24.1.1.jar:/opt/vespa/lib/graalpy/truffle-nfi-libffi-24.1.1.jar:/opt/vespa/lib/graalpy/truffle-runtime-24.1.1.jar:/opt/vespa/lib/graalpy/word-24.1.1.jar:/opt/vespa/lib/graalpy/xz-24.1.1.jar:/opt/vespa/lib/graalpy/python-language-24.1.1.jar:/opt/vespa/lib/graalpy/python-resources-24.1.1.jar:/opt/vespa/lib/graalpy/regex-24.1.1.jar:/opt/vespa/lib/graalpy/truffle-api-24.1.1.jar:/opt/vespa/lib/graalpy/truffle-compiler-24.1.1.jar:/opt/vespa/lib/graalpy/truffle-enterprise-24.1.1.jar</classpath_extra>
+            <export_packages>org.graalvm.polyglot</export_packages>
+        </jdisc>
+    </config>
+
     <container id="default" version="1.0">
         <processing>
             <chain id="default">

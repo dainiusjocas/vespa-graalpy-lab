@@ -57,6 +57,114 @@ When `scope=provided` then class cannot be found:
 	... 9 more
 ```
 
+After adding jars to the container directly:
+```text
+
+[2024-12-20 21:54:03.460] ERROR   container        Container.com.yahoo.protect.Process	java.lang.Error handling request\nexception=\njava.lang.InternalError: java.lang.reflect.InvocationTargetException
+	at com.oracle.truffle.runtime.ModulesSupport.loadModulesSupportLibrary(ModulesSupport.java:170)
+	at com.oracle.truffle.runtime.ModulesSupport.<clinit>(ModulesSupport.java:59)
+	at com.oracle.truffle.runtime.hotspot.HotSpotTruffleRuntimeAccess.createRuntime(HotSpotTruffleRuntimeAccess.java:84)
+	at com.oracle.truffle.runtime.hotspot.HotSpotTruffleRuntimeAccess.getRuntime(HotSpotTruffleRuntimeAccess.java:75)
+	at com.oracle.truffle.api.Truffle.createRuntime(Truffle.java:145)
+	at com.oracle.truffle.api.Truffle$1.run(Truffle.java:176)
+	at com.oracle.truffle.api.Truffle$1.run(Truffle.java:174)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:318)
+	at com.oracle.truffle.api.Truffle.initRuntime(Truffle.java:174)
+	at com.oracle.truffle.api.Truffle.<clinit>(Truffle.java:63)
+	at com.oracle.truffle.runtime.enterprise.EnterpriseTruffle.supportsEnterpriseExtensions(stripped:22)
+	at com.oracle.truffle.polyglot.enterprise.EnterprisePolyglotImpl.getPriority(stripped:551)
+	at java.base/java.util.Comparator.lambda$comparing$77a9974f$1(Comparator.java:473)
+	at java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:355)
+	at java.base/java.util.TimSort.sort(TimSort.java:220)
+	at java.base/java.util.Arrays.sort(Arrays.java:1307)
+	at java.base/java.util.ArrayList.sort(ArrayList.java:1721)
+	at java.base/java.util.Collections.sort(Collections.java:179)
+	at org.graalvm.polyglot.Engine.loadAndValidateProviders(Engine.java:1641)
+	at org.graalvm.polyglot.Engine$1.run(Engine.java:1717)
+	at org.graalvm.polyglot.Engine$1.run(Engine.java:1712)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:318)
+	at org.graalvm.polyglot.Engine.initEngineImpl(Engine.java:1712)
+	at org.graalvm.polyglot.Engine$ImplHolder.<clinit>(Engine.java:170)
+	at org.graalvm.polyglot.Engine.getImpl(Engine.java:422)
+	at org.graalvm.polyglot.Engine$Builder.build(Engine.java:724)
+	at org.graalvm.polyglot.Context$Builder.build(Context.java:1925)
+	at org.graalvm.polyglot.Context.create(Context.java:979)
+	at ai.vespa.examples.ExampleProcessor.process(ExampleProcessor.java:37)
+	at com.yahoo.processing.execution.Execution.process(Execution.java:112)
+	at com.yahoo.processing.handler.AbstractProcessingHandler.handle(AbstractProcessingHandler.java:126)
+	at com.yahoo.container.jdisc.ThreadedHttpRequestHandler.handleRequest(ThreadedHttpRequestHandler.java:87)
+	at com.yahoo.container.jdisc.ThreadedRequestHandler$RequestTask.processRequest(ThreadedRequestHandler.java:191)
+	at com.yahoo.container.jdisc.ThreadedRequestHandler$RequestTask.run(ThreadedRequestHandler.java:185)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)\nCaused by: java.lang.reflect.InvocationTargetException
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at com.oracle.truffle.runtime.ModulesSupport.loadModulesSupportLibrary(ModulesSupport.java:163)
+	... 36 more\nCaused by: java.nio.file.AccessDeniedException: /opt/vespa/.cache
+	at java.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:90)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:106)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111)
+	at java.base/sun.nio.fs.UnixFileSystemProvider.createDirectory(UnixFileSystemProvider.java:397)
+	at java.base/java.nio.file.Files.createDirectory(Files.java:700)
+	at java.base/java.nio.file.Files.createAndCheckIsDirectory(Files.java:807)
+	at java.base/java.nio.file.Files.createDirectories(Files.java:793)
+	at com.oracle.truffle.polyglot.InternalResourceCache.installResource(InternalResourceCache.java:233)
+	at com.oracle.truffle.polyglot.InternalResourceCache.installRuntimeResource(InternalResourceCache.java:190)
+	... 41 more\n
+```
+
+Overall follow the guidelines from [here](https://docs.vespa.ai/en/components/bundles.html#add-jni-code-to-global-classpath):
+- Create a separate directory for graalpy dependencies.
+- Copy all the jars from VAP `dependencies` dir to the container.
+- Make sure that vespa user has read rights.
+- Create a dir `mkdir  /opt/vespa/.cache` and `chown vespa  /opt/vespa/.cache`.
+
+And it works!!!!!
+
+Here are all dependencies needed for graalvm.
+```xml
+        <dependency>
+            <groupId>org.graalvm.python</groupId>
+            <artifactId>python</artifactId>
+            <version>24.1.1</version>
+            <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>org.graalvm.python</groupId>
+            <artifactId>python-language</artifactId>
+            <version>24.1.1</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.graalvm.python</groupId>
+            <artifactId>python-community</artifactId>
+            <version>24.1.1</version>
+            <type>pom</type>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.graalvm.truffle</groupId>
+            <artifactId>truffle-runtime</artifactId>
+            <version>24.1.1</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.graalvm.truffle</groupId>
+            <artifactId>truffle-enterprise</artifactId>
+            <version>24.1.1</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.graalvm.python</groupId>
+            <artifactId>python-resources</artifactId>
+            <version>24.1.1</version>
+            <scope>compile</scope>
+        </dependency>
+```
+
 # Vespa sample applications - a generic request-response processing application
 
 A simple stateless Vespa application demonstrating general composable request-response processing with Vespa.
