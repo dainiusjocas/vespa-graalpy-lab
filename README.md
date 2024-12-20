@@ -38,6 +38,25 @@ Container.com.yahoo.processing.handler.ProcessingHandler	Uncaught exception hand
 
 Adding `<scope>compile</scope>` to pom.xml to the GraalPy dependencies doesn't help.
 
+When `scope=provided` then class cannot be found:
+```text
+[2024-12-20 11:08:52.965] ERROR   container        Container.com.yahoo.protect.Process	java.lang.Error handling request\nexception=\njava.lang.NoClassDefFoundError: org/graalvm/polyglot/Context
+	at ai.vespa.examples.ExampleProcessor.process(ExampleProcessor.java:37)
+	at com.yahoo.processing.execution.Execution.process(Execution.java:112)
+	at com.yahoo.processing.handler.AbstractProcessingHandler.handle(AbstractProcessingHandler.java:126)
+	at com.yahoo.container.jdisc.ThreadedHttpRequestHandler.handleRequest(ThreadedHttpRequestHandler.java:87)
+	at com.yahoo.container.jdisc.ThreadedRequestHandler$RequestTask.processRequest(ThreadedRequestHandler.java:191)
+	at com.yahoo.container.jdisc.ThreadedRequestHandler$RequestTask.run(ThreadedRequestHandler.java:185)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)\nCaused by: java.lang.ClassNotFoundException: org.graalvm.polyglot.Context not found by generic-request-processing [31]
+	at org.apache.felix.framework.BundleWiringImpl.findClassOrResourceByDelegation(BundleWiringImpl.java:1591)
+	at org.apache.felix.framework.BundleWiringImpl.access$300(BundleWiringImpl.java:79)
+	at org.apache.felix.framework.BundleWiringImpl$BundleClassLoader.loadClass(BundleWiringImpl.java:1976)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
+	... 9 more
+```
+
 # Vespa sample applications - a generic request-response processing application
 
 A simple stateless Vespa application demonstrating general composable request-response processing with Vespa.
