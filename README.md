@@ -14,6 +14,28 @@ Try to run python in Vespa containers with pygraal
 
 Following the [guide](https://www.graalvm.org/python/#getting-started).
 
+## Problems
+
+After the basic setup we get this exception back:
+```text
+Container.com.yahoo.processing.handler.ProcessingHandler	Uncaught exception handling request\nexception=\njava.lang.IllegalStateException: No language and polyglot implementation was found on the module-path. Make sure at last one language is added to the module-path. 
+	at org.graalvm.polyglot.Engine$PolyglotInvalid.noPolyglotImplementationFound(Engine.java:1801)
+	at org.graalvm.polyglot.Engine$PolyglotInvalid.createHostAccess(Engine.java:1792)
+	at org.graalvm.polyglot.Engine$PolyglotInvalid.createHostAccess(Engine.java:1754)
+	at org.graalvm.polyglot.Engine$Builder.build(Engine.java:741)
+	at org.graalvm.polyglot.Context$Builder.build(Context.java:1925)
+	at org.graalvm.polyglot.Context.create(Context.java:979)
+	at ai.vespa.examples.ExampleProcessor.process(ExampleProcessor.java:37)
+	at com.yahoo.processing.execution.Execution.process(Execution.java:112)
+	at com.yahoo.processing.handler.AbstractProcessingHandler.handle(AbstractProcessingHandler.java:126)
+	at com.yahoo.container.jdisc.ThreadedHttpRequestHandler.handleRequest(ThreadedHttpRequestHandler.java:87)
+	at com.yahoo.container.jdisc.ThreadedRequestHandler$RequestTask.processRequest(ThreadedRequestHandler.java:191)
+	at com.yahoo.container.jdisc.ThreadedRequestHandler$RequestTask.run(ThreadedRequestHandler.java:185)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)\n
+```
+
 # Vespa sample applications - a generic request-response processing application
 
 A simple stateless Vespa application demonstrating general composable request-response processing with Vespa.
