@@ -9,6 +9,11 @@ Try to run python in Vespa containers with pygraal
   <img alt="#Vespa" width="200" src="https://assets.vespa.ai/logos/Vespa-logo-dark-RGB.svg" style="margin-bottom: 25px;">
 </picture>
 
+
+## Adding pygraal code
+
+Following the [guide](https://www.graalvm.org/python/#getting-started).
+
 # Vespa sample applications - a generic request-response processing application
 
 A simple stateless Vespa application demonstrating general composable request-response processing with Vespa.

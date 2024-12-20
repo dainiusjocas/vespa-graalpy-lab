@@ -6,6 +6,7 @@ import com.yahoo.processing.Processor;
 import com.yahoo.processing.Request;
 import com.yahoo.processing.Response;
 import com.yahoo.processing.execution.Execution;
+import org.graalvm.polyglot.Context;
 
 /**
  * An example processor which receives a request and returns a response.
@@ -31,6 +32,12 @@ public class ExampleProcessor extends Processor {
 
         // process the response
         response.data().add(new StringData(request, message));
+
+        System.out.println(">>>>>");
+        try (Context context = Context.create()) {
+            context.eval("python", "print('Hello from GraalPy!')");
+        }
+        System.out.println("<<<<<");
 
         // return the response up the chain
         return response;

@@ -7,6 +7,7 @@ import com.yahoo.processing.Request;
 import com.yahoo.processing.Response;
 import com.yahoo.processing.execution.Execution;
 import org.junit.jupiter.api.Test;
+import org.graalvm.polyglot.Context;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

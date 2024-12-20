@@ -19,6 +19,17 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.graalvm.polyglot</groupId>
+            <artifactId>polyglot</artifactId>
+            <version>24.1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.graalvm.polyglot</groupId>
+            <artifactId>python</artifactId>
+            <version>24.1.1</version>
+            <type>pom</type>
+        </dependency>
+        <dependency>
             <groupId>com.yahoo.vespa</groupId>
             <artifactId>container</artifactId>
             <version>${vespa_version}</version>
@@ -40,6 +51,24 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.graalvm.python</groupId>
+                <artifactId>graalpy-maven-plugin</artifactId>
+                <version>24.1.1</version>
+                <executions>
+                    <execution>
+                        <configuration>
+                            <packages>
+                                <!-- Select Python packages to install via pip. -->
+                                <package>pyfiglet==1.0.2</package>
+                            </packages>
+                        </configuration>
+                        <goals>
+                            <goal>process-graalpy-resources</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
