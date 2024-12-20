@@ -196,6 +196,12 @@ Here are all dependencies needed for graalvm refactored so that they are include
         </dependency>
 ```
 
+TODO:
+- [ ] minimize the dependencies list (now 193 MB)
+- [ ] How to give the request/response objects for python
+- [ ] How to run python scripts from files
+- [ ] Add some dependencies
+
 # Vespa sample applications - a generic request-response processing application
 
 A simple stateless Vespa application demonstrating general composable request-response processing with Vespa.
