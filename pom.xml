@@ -22,11 +22,13 @@
             <groupId>org.graalvm.polyglot</groupId>
             <artifactId>polyglot</artifactId>
             <version>24.1.1</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.graalvm.polyglot</groupId>
             <artifactId>python</artifactId>
             <version>24.1.1</version>
+            <scope>compile</scope>
             <type>pom</type>
         </dependency>
         <dependency>

@@ -36,6 +36,8 @@ Container.com.yahoo.processing.handler.ProcessingHandler	Uncaught exception hand
 	at java.base/java.lang.Thread.run(Thread.java:840)\n
 ```
 
+Adding `<scope>compile</scope>` to pom.xml to the GraalPy dependencies doesn't help.
+
 # Vespa sample applications - a generic request-response processing application
 
 A simple stateless Vespa application demonstrating general composable request-response processing with Vespa.
