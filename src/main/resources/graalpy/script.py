@@ -1,3 +1,3 @@
-print('Hello from GraalPy!')
+print('Hello from GraalPy script!')
 
-'graalpy'
+'a return value'

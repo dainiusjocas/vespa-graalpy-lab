@@ -43,7 +43,7 @@ public class ExampleProcessor extends Processor {
         try (InputStream inputStream = getClass().getResourceAsStream("/graalpy/script.py")) {
             if (inputStream != null) {
                 graalpyScript = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-                try (Context context = Context.create()) {
+                try (Context context = Context.newBuilder("python").build()) {
                     Value value = context.eval("python", graalpyScript);
                     String stringValue = value.asString();
                     response.data().add(new StringData(request, stringValue));
