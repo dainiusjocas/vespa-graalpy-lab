@@ -9,6 +9,9 @@ import com.yahoo.processing.execution.Execution;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Value;
 
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+
 /**
  * An example processor which receives a request and returns a response.
  * If ExampleProcessorConfig is not found you need to run mvn install on this project.
@@ -35,14 +38,22 @@ public class ExampleProcessor extends Processor {
         response.data().add(new StringData(request, message));
 
         System.out.println(">>>>>");
-        try (Context context = Context.create()) {
-            String graalpyScript =
-                    "print('Hello from GraalPy!')\n"
-                    + "'Graalpy'";
-            Value value = context.eval("python", graalpyScript);
-            String stringValue = value.asString();
-            response.data().add(new StringData(request, stringValue));
+        String graalpyScript = "'FAILED TO LOAD SCRIPT'";
+
+        try (InputStream inputStream = getClass().getResourceAsStream("/graalpy/script.py")) {
+            if (inputStream != null) {
+                graalpyScript = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+                try (Context context = Context.create()) {
+                    Value value = context.eval("python", graalpyScript);
+                    String stringValue = value.asString();
+                    response.data().add(new StringData(request, stringValue));
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Failed to load script " + e.getMessage());
+            throw new RuntimeException(e);
         }
+
         System.out.println("<<<<<");
 
         // return the response up the chain
