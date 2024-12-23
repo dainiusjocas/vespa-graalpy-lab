@@ -34,11 +34,11 @@ public class ExampleProcessor extends Processor {
         // process the response
         response.data().add(new StringData(request, message));
 
-        String graalpyScript = "print('Hello from GraalPy!')\n"
-                + "'Graalpy'";
-
         System.out.println(">>>>>");
         try (Context context = Context.create()) {
+            String graalpyScript =
+                    "print('Hello from GraalPy!')\n"
+                    + "'Graalpy'";
             Value value = context.eval("python", graalpyScript);
             String stringValue = value.asString();
             response.data().add(new StringData(request, stringValue));
