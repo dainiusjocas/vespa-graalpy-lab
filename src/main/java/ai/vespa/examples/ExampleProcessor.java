@@ -27,6 +27,7 @@ public class ExampleProcessor extends Processor {
     @Override
     public Response process(Request request, Execution execution) {
         // process the request
+        String textToRender = request.properties().get("text").toString();
         request.properties().set("foo", "bar");
 
         // pass it down the chain to get a response
@@ -50,7 +51,8 @@ public class ExampleProcessor extends Processor {
 
         try (Context context = GraalPyResources.contextBuilder(vfs).build()) {
             // run some code from a pip dependencies
-            context.eval("python", "from pyfiglet import Figlet;f = Figlet(font='slant');print(f.renderText('text to render'))");
+            context.eval("python",
+                    "from pyfiglet import Figlet;f = Figlet(font='slant');print(f.renderText('" + textToRender + "'))");
             // load code from a script
             String string = context.eval("python", "import script;script.return_value()").asString();
             response.data().add(new StringData(request, string));
