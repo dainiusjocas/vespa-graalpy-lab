@@ -15,27 +15,16 @@ import org.graalvm.python.embedding.utils.VirtualFileSystem;
  * If ExampleProcessorConfig is not found you need to run mvn install on this project.
  */
 public class ExampleProcessor extends Processor {
-
-    private final String message;
+    private final Context context;
+    private final GraalPy figlet;
 
     @Inject
     public ExampleProcessor(ExampleProcessorConfig config) {
-        this.message = config.message();
+        this.context = initContext();
+        this.figlet = initPyfiglet(this.context);
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public Response process(Request request, Execution execution) {
-        // process the request
-        String textToRender = request.properties().get("text").toString();
-        request.properties().set("foo", "bar");
-
-        // pass it down the chain to get a response
-        Response response = execution.process(request);
-
-        // process the response
-        response.data().add(new StringData(request, message));
-
+    private Context initContext() {
         VirtualFileSystem vfs = VirtualFileSystem.newBuilder()
                 // This is the trick that makes it all work when deployed in Vespa.
                 // As always, the classloader is the tricky part.
@@ -48,20 +37,39 @@ public class ExampleProcessor extends Processor {
                 // declared in the bundle.
                 .resourceLoadingClass(StringData.class)
                 .build();
-
-        try (Context context = GraalPyResources.contextBuilder(vfs).build()) {
-            // run some code from a pip dependencies
-            context.eval("python",
-                    "from pyfiglet import Figlet;f = Figlet(font='slant');print(f.renderText('" + textToRender + "'))");
-            // load code from a script
-            String string = context.eval("python", "import script;script.return_value()").asString();
-            response.data().add(new StringData(request, string));
+        try {
+            return GraalPyResources.contextBuilder(vfs).build();
         } catch (Exception e) {
-            System.out.println("Failed to load script " + e.getMessage());
             throw new RuntimeException(e);
         }
+    }
+
+    private GraalPy initPyfiglet(Context context) {
+        return context.eval("python",
+                "from pyfiglet import Figlet;f = Figlet(font='slant');f").as(GraalPy.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Response process(Request request, Execution execution) {
+        // process the request
+        String textToRender = request.properties().get("text").toString();
+        // pass it down the chain to get a response
+        Response response = execution.process(request);
+        // add figlet to the response
+        String string = figlet.renderText(textToRender);
+        response.data().add(new StringData(request, string));
         // return the response up the chain
         return response;
     }
 
+    interface GraalPy {
+        String renderText(String string);
+    }
+
+    @Override
+    public void deconstruct() {
+        super.deconstruct();
+        this.context.close();
+    }
 }

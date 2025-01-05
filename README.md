@@ -24,6 +24,18 @@ mvn clean -DskipTests package && \
   curl -s http://localhost:8080/processing/\?text\=FOOBAR
 ```
 
+One request with properly printing the response.
+```shell
+curl -s http://localhost:8080/processing/\?text\=Dainius | jq '.datalist[0].data' -r
+```
+
+Load test with one client:
+```shell
+echo "GET http://localhost:8080/processing/?text=FOOBAR" \
+| vegeta attack -duration=5s -max-workers 1 \
+| vegeta report
+```
+
 ## Problems
 
 After the basic setup we get this exception back:
