@@ -14,6 +14,16 @@ Try to run python in Vespa containers with pygraal
 
 Following the [guide](https://www.graalvm.org/python/#getting-started).
 
+```shell
+docker build -t vespa-graalpy-1 .
+docker run --detach --name vespa --hostname vespa-container \
+  --publish 127.0.0.1:8080:8080 --publish 127.0.0.1:19071:19071 \
+  vespa-graalpy-1
+mvn clean -DskipTests package && \
+  vespa deploy -w 120 && \
+  curl -s http://localhost:8080/processing/\?text\=FOOBAR
+```
+
 ## Problems
 
 After the basic setup we get this exception back:
