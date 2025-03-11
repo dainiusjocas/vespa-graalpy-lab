@@ -19,7 +19,6 @@ mvn clean -DskipTests package && \
 One request with properly printing the response.
 ```shell
 curl -s http://localhost:8080/processing/\?text\=Dainius | jq '.datalist[0].data' -r
-curl -s http://192.168.0.141:8080/processing/\?text\=Dainius | jq '.datalist[0].data' -r
 ```
 
 ## Benchmarking
