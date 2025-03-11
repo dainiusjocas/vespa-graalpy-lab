@@ -1,54 +1,55 @@
-FROM vespaengine/vespa:8.452.13
+FROM vespaengine/vespa:8.492.15
 
 USER root
 
 ARG GRAALPY_DIR=/opt/vespa/lib/graalpy
 ARG MAVEN_REPO=https://repo1.maven.org/maven2
+ARG GRAALVM_VERSION=24.1.2
 
 # Put GraalPy jars into a separate directory
 RUN mkdir $GRAALPY_DIR && \
-    curl -s $MAVEN_REPO/org/graalvm/polyglot/polyglot/24.1.1/polyglot-24.1.1.jar \
-          --output $GRAALPY_DIR/polyglot-24.1.1.jar && \
-    curl -s $MAVEN_REPO/org/graalvm/sdk/collections/24.1.1/collections-24.1.1.jar \
-          --output $GRAALPY_DIR/collections-24.1.1.jar && \
-    curl -s $MAVEN_REPO/org/graalvm/sdk/nativeimage/24.1.1/nativeimage-24.1.1.jar \
-          --output $GRAALPY_DIR/nativeimage-24.1.1.jar && \
-    curl -s $MAVEN_REPO/org/graalvm/sdk/word/24.1.1/word-24.1.1.jar \
-          --output $GRAALPY_DIR/word-24.1.1.jar && \
-    curl -s $MAVEN_REPO/org/graalvm/python/python-language/24.1.1/python-language-24.1.1.jar \
-          --output $GRAALPY_DIR/python-language-24.1.1.jar && \
-    curl -s $MAVEN_REPO/org/graalvm/truffle/truffle-api/24.1.1/truffle-api-24.1.1.jar \
-          --output $GRAALPY_DIR/truffle-api-24.1.1.jar && \
-    curl -s $MAVEN_REPO/org/graalvm/truffle/truffle-nfi/24.1.1/truffle-nfi-24.1.1.jar \
-          --output $GRAALPY_DIR/truffle-nfi-24.1.1.jar && \
-    curl -s $MAVEN_REPO/org/graalvm/truffle/truffle-nfi-libffi/24.1.1/truffle-nfi-libffi-24.1.1.jar \
-          --output $GRAALPY_DIR/truffle-nfi-libffi-24.1.1.jar && \
-    curl -s $MAVEN_REPO/org/graalvm/regex/regex/24.1.1/regex-24.1.1.jar \
-          --output $GRAALPY_DIR/regex-24.1.1.jar && \
-    curl -s $MAVEN_REPO/org/graalvm/llvm/llvm-api/24.1.1/llvm-api-24.1.1.jar \
-          --output $GRAALPY_DIR/llvm-api-24.1.1.jar && \
-    curl -s $MAVEN_REPO/org/graalvm/shadowed/json/24.1.1/json-24.1.1.jar \
-          --output $GRAALPY_DIR/json-24.1.1.jar && \
-    curl -s $MAVEN_REPO/org/graalvm/shadowed/icu4j/24.1.1/icu4j-24.1.1.jar \
-          --output $GRAALPY_DIR/icu4j-24.1.1.jar && \
-    curl -s $MAVEN_REPO/org/graalvm/shadowed/xz/24.1.1/xz-24.1.1.jar \
-          --output $GRAALPY_DIR/xz-24.1.1.jar && \
-    curl -s $MAVEN_REPO/org/graalvm/tools/profiler-tool/24.1.1/profiler-tool-24.1.1.jar \
-          --output $GRAALPY_DIR/profiler-tool-24.1.1.jar && \
-    curl -s $MAVEN_REPO/org/graalvm/truffle/python-resources/24.1.1/python-resources-24.1.1.jar \
-          --output $GRAALPY_DIR/python-resources-24.1.1.jar && \
-    curl -s $MAVEN_REPO/org/graalvm/truffle/truffle-runtime/24.1.1/truffle-runtime-24.1.1.jar \
-          --output $GRAALPY_DIR/truffle-runtime-24.1.1.jar && \
-    curl -s $MAVEN_REPO/org/graalvm/truffle/truffle-enterprise/24.1.1/truffle-enterprise-24.1.1.jar \
-          --output $GRAALPY_DIR/truffle-enterprise-24.1.1.jar && \
-    curl -s $MAVEN_REPO/org/graalvm/truffle/truffle-compiler/24.1.1/truffle-compiler-24.1.1.jar \
-          --output $GRAALPY_DIR/truffle-compiler-24.1.1.jar && \
-    curl -s $MAVEN_REPO/org/graalvm/sdk/jniutils/24.1.1/jniutils-24.1.1.jar \
-          --output $GRAALPY_DIR/jniutils-24.1.1.jar && \
-    curl -s $MAVEN_REPO/org/graalvm/sdk/nativebridge/24.1.1/nativebridge-24.1.1.jar \
-          --output $GRAALPY_DIR/nativebridge-24.1.1.jar && \
-    curl -s $MAVEN_REPO/org/graalvm/python/python-embedding/24.1.1/python-embedding-24.1.1.jar \
-          --output $GRAALPY_DIR/python-embedding-24.1.1.jar && \
+    curl -s $MAVEN_REPO/org/graalvm/polyglot/polyglot/$GRAALVM_VERSION/polyglot-$GRAALVM_VERSION.jar \
+          --output $GRAALPY_DIR/polyglot-$GRAALVM_VERSION.jar && \
+    curl -s $MAVEN_REPO/org/graalvm/sdk/collections/$GRAALVM_VERSION/collections-$GRAALVM_VERSION.jar \
+          --output $GRAALPY_DIR/collections-$GRAALVM_VERSION.jar && \
+    curl -s $MAVEN_REPO/org/graalvm/sdk/nativeimage/$GRAALVM_VERSION/nativeimage-$GRAALVM_VERSION.jar \
+          --output $GRAALPY_DIR/nativeimage-$GRAALVM_VERSION.jar && \
+    curl -s $MAVEN_REPO/org/graalvm/sdk/word/$GRAALVM_VERSION/word-$GRAALVM_VERSION.jar \
+          --output $GRAALPY_DIR/word-$GRAALVM_VERSION.jar && \
+    curl -s $MAVEN_REPO/org/graalvm/python/python-language/$GRAALVM_VERSION/python-language-$GRAALVM_VERSION.jar \
+          --output $GRAALPY_DIR/python-language-$GRAALVM_VERSION.jar && \
+    curl -s $MAVEN_REPO/org/graalvm/truffle/truffle-api/$GRAALVM_VERSION/truffle-api-$GRAALVM_VERSION.jar \
+          --output $GRAALPY_DIR/truffle-api-$GRAALVM_VERSION.jar && \
+    curl -s $MAVEN_REPO/org/graalvm/truffle/truffle-nfi/$GRAALVM_VERSION/truffle-nfi-$GRAALVM_VERSION.jar \
+          --output $GRAALPY_DIR/truffle-nfi-$GRAALVM_VERSION.jar && \
+    curl -s $MAVEN_REPO/org/graalvm/truffle/truffle-nfi-libffi/$GRAALVM_VERSION/truffle-nfi-libffi-$GRAALVM_VERSION.jar \
+          --output $GRAALPY_DIR/truffle-nfi-libffi-$GRAALVM_VERSION.jar && \
+    curl -s $MAVEN_REPO/org/graalvm/regex/regex/$GRAALVM_VERSION/regex-$GRAALVM_VERSION.jar \
+          --output $GRAALPY_DIR/regex-$GRAALVM_VERSION.jar && \
+    curl -s $MAVEN_REPO/org/graalvm/llvm/llvm-api/$GRAALVM_VERSION/llvm-api-$GRAALVM_VERSION.jar \
+          --output $GRAALPY_DIR/llvm-api-$GRAALVM_VERSION.jar && \
+    curl -s $MAVEN_REPO/org/graalvm/shadowed/json/$GRAALVM_VERSION/json-$GRAALVM_VERSION.jar \
+          --output $GRAALPY_DIR/json-$GRAALVM_VERSION.jar && \
+    curl -s $MAVEN_REPO/org/graalvm/shadowed/icu4j/$GRAALVM_VERSION/icu4j-$GRAALVM_VERSION.jar \
+          --output $GRAALPY_DIR/icu4j-$GRAALVM_VERSION.jar && \
+    curl -s $MAVEN_REPO/org/graalvm/shadowed/xz/$GRAALVM_VERSION/xz-$GRAALVM_VERSION.jar \
+          --output $GRAALPY_DIR/xz-$GRAALVM_VERSION.jar && \
+    curl -s $MAVEN_REPO/org/graalvm/tools/profiler-tool/$GRAALVM_VERSION/profiler-tool-$GRAALVM_VERSION.jar \
+          --output $GRAALPY_DIR/profiler-tool-$GRAALVM_VERSION.jar && \
+    curl -s $MAVEN_REPO/org/graalvm/truffle/python-resources/$GRAALVM_VERSION/python-resources-$GRAALVM_VERSION.jar \
+          --output $GRAALPY_DIR/python-resources-$GRAALVM_VERSION.jar && \
+    curl -s $MAVEN_REPO/org/graalvm/truffle/truffle-runtime/$GRAALVM_VERSION/truffle-runtime-$GRAALVM_VERSION.jar \
+          --output $GRAALPY_DIR/truffle-runtime-$GRAALVM_VERSION.jar && \
+    curl -s $MAVEN_REPO/org/graalvm/truffle/truffle-enterprise/$GRAALVM_VERSION/truffle-enterprise-$GRAALVM_VERSION.jar \
+          --output $GRAALPY_DIR/truffle-enterprise-$GRAALVM_VERSION.jar && \
+    curl -s $MAVEN_REPO/org/graalvm/truffle/truffle-compiler/$GRAALVM_VERSION/truffle-compiler-$GRAALVM_VERSION.jar \
+          --output $GRAALPY_DIR/truffle-compiler-$GRAALVM_VERSION.jar && \
+    curl -s $MAVEN_REPO/org/graalvm/sdk/jniutils/$GRAALVM_VERSION/jniutils-$GRAALVM_VERSION.jar \
+          --output $GRAALPY_DIR/jniutils-$GRAALVM_VERSION.jar && \
+    curl -s $MAVEN_REPO/org/graalvm/sdk/nativebridge/$GRAALVM_VERSION/nativebridge-$GRAALVM_VERSION.jar \
+          --output $GRAALPY_DIR/nativebridge-$GRAALVM_VERSION.jar && \
+    curl -s $MAVEN_REPO/org/graalvm/python/python-embedding/$GRAALVM_VERSION/python-embedding-$GRAALVM_VERSION.jar \
+          --output $GRAALPY_DIR/python-embedding-$GRAALVM_VERSION.jar && \
     curl -s $MAVEN_REPO/org/bouncycastle/bcpkix-jdk18on/1.78.1/bcpkix-jdk18on-1.78.1.jar \
           --output $GRAALPY_DIR/bcpkix-jdk18on-1.78.1.jar && \
     curl -s $MAVEN_REPO/org/bouncycastle/bcprov-jdk18on/1.78.1/bcprov-jdk18on-1.78.1.jar \
