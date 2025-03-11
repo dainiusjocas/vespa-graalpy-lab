@@ -1,281 +1,113 @@
-# vespa-pygraal-lab
-Try to run python in Vespa containers with pygraal
+# vespa-graalpy-lab
 
-<!-- Copyright Vespa.ai. Licensed under the terms of the Apache 2.0 license. See LICENSE in the project root. -->
+Running Python code in Vespa containers with GraalPy.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://assets.vespa.ai/logos/Vespa-logo-green-RGB.svg">
-  <source media="(prefers-color-scheme: light)" srcset="https://assets.vespa.ai/logos/Vespa-logo-dark-RGB.svg">
-  <img alt="#Vespa" width="200" src="https://assets.vespa.ai/logos/Vespa-logo-dark-RGB.svg" style="margin-bottom: 25px;">
-</picture>
-
-
-## Adding pygraal code
+## Adding GraalPy code
 
 Following the [guide](https://www.graalvm.org/python/#getting-started).
 
 ```shell
-docker build -t vespa-graalpy-1 .
-docker run --detach --name vespa --hostname vespa-container \
-  --publish 127.0.0.1:8080:8080 --publish 127.0.0.1:19071:19071 \
+docker build -f Dockerfile -t vespa-graalpy-1 .
+docker run --rm --name vespa --hostname vespa-container \
+  --publish 0.0.0.0:8080:8080 --publish 0.0.0.0:19071:19071 \
   vespa-graalpy-1
 mvn clean -DskipTests package && \
-  vespa deploy -w 120 && \
-  curl -s http://localhost:8080/processing/\?text\=FOOBAR
+  vespa deploy -w 120 -t http://0.0.0.0:19071 && \
+  curl -s http://0.0.0.0:8080/processing/\?text\=FOOBAR
 ```
 
 One request with properly printing the response.
 ```shell
 curl -s http://localhost:8080/processing/\?text\=Dainius | jq '.datalist[0].data' -r
+curl -s http://192.168.0.141:8080/processing/\?text\=Dainius | jq '.datalist[0].data' -r
 ```
 
-Load test with one client:
+## Benchmarking
+
+### Default JVM
+
+Concurrency=1
+```
+echo "GET http://localhost:8080/processing/?text=FOOBAR" \
+| vegeta attack -duration=10s -rate=0 -workers 1 -max-workers 1 \
+| vegeta report
+Requests      [total, rate, throughput]         9270, 926.93, 926.84
+Duration      [total, attack, wait]             10.002s, 10.001s, 984.125µs
+Latencies     [min, mean, 50, 90, 95, 99, max]  895.458µs, 1.074ms, 1.055ms, 1.165ms, 1.217ms, 1.41ms, 7.832ms
+Bytes In      [total, mean]                     2623410, 283.00
+Bytes Out     [total, mean]                     0, 0.00
+Success       [ratio]                           100.00%
+Status Codes  [code:count]                      200:9270
+```
+
+Concurrency=8
+```
+ echo "GET http://localhost:8080/processing/?text=FOOBAR" \
+| vegeta attack -duration=10s -rate=0 -workers 8 -max-workers 8 \
+| vegeta report
+Requests      [total, rate, throughput]         14345, 1434.24, 1433.99
+Duration      [total, attack, wait]             10.003s, 10.002s, 1.075ms
+Latencies     [min, mean, 50, 90, 95, 99, max]  1.028ms, 5.505ms, 5.45ms, 5.834ms, 6.057ms, 6.867ms, 23.685ms
+Bytes In      [total, mean]                     4059352, 282.98
+Bytes Out     [total, mean]                     0, 0.00
+Success       [ratio]                           99.99%
+Status Codes  [code:count]                      0:1  200:14344
+```
+
+### GraalVM 23
+
+Build a Docker image and run it:
+```shell
+docker build -f Dockerfile -t vespa-graalpy-1 .
+docker build -f graalvm.Dockerfile -t vespa-graalvm-graalpy-1 .
+docker run --rm --name vespa-graalvm --hostname vespa-container \
+  --publish 0.0.0.0:8080:8080 --publish 0.0.0.0:19071:19071 \
+  vespa-graalvm-graalpy-1
+mvn clean -DskipTests package && \
+  vespa deploy -w 120 -t http://0.0.0.0:19071 && \
+  curl -s http://0.0.0.0:8080/processing/\?text\=FOOBAR
+```
+
+Concurrency=1
+```
+echo "GET http://localhost:8080/processing/?text=FOOBAR" \
+| vegeta attack -duration=10s -rate=0 -workers 1 -max-workers 1 \
+| vegeta report
+Requests      [total, rate, throughput]         20653, 2065.30, 2065.21
+Duration      [total, attack, wait]             10s, 10s, 436.5µs
+Latencies     [min, mean, 50, 90, 95, 99, max]  394.875µs, 481.576µs, 468.612µs, 525.774µs, 573.852µs, 664.375µs, 5.055ms
+Bytes In      [total, mean]                     5844799, 283.00
+Bytes Out     [total, mean]                     0, 0.00
+Success       [ratio]                           100.00%
+Status Codes  [code:count]                      200:20653
+```
+
+Concurrency=8
 ```shell
 echo "GET http://localhost:8080/processing/?text=FOOBAR" \
-| vegeta attack -duration=5s -max-workers 1 \
+| vegeta attack -duration=10s -rate=0 -workers 8 -max-workers 8 \
 | vegeta report
+Requests      [total, rate, throughput]         78592, 7859.19, 7858.42
+Duration      [total, attack, wait]             10.001s, 10s, 980.875µs
+Latencies     [min, mean, 50, 90, 95, 99, max]  447.834µs, 1.008ms, 991.243µs, 1.304ms, 1.402ms, 1.634ms, 5.893ms
+Bytes In      [total, mean]                     22241536, 283.00
+Bytes Out     [total, mean]                     0, 0.00
+Success       [ratio]                           100.00%
+Status Codes  [code:count]                      200:78592
 ```
 
-## Problems
+So GraalVM is ~2x faster single threaded, and ~5x faster with 8 threads.
 
-After the basic setup we get this exception back:
-```text
-Container.com.yahoo.processing.handler.ProcessingHandler	Uncaught exception handling request\nexception=\njava.lang.IllegalStateException: No language and polyglot implementation was found on the module-path. Make sure at last one language is added to the module-path. 
-	at org.graalvm.polyglot.Engine$PolyglotInvalid.noPolyglotImplementationFound(Engine.java:1801)
-	at org.graalvm.polyglot.Engine$PolyglotInvalid.createHostAccess(Engine.java:1792)
-	at org.graalvm.polyglot.Engine$PolyglotInvalid.createHostAccess(Engine.java:1754)
-	at org.graalvm.polyglot.Engine$Builder.build(Engine.java:741)
-	at org.graalvm.polyglot.Context$Builder.build(Context.java:1925)
-	at org.graalvm.polyglot.Context.create(Context.java:979)
-	at ai.vespa.examples.ExampleProcessor.process(ExampleProcessor.java:37)
-	at com.yahoo.processing.execution.Execution.process(Execution.java:112)
-	at com.yahoo.processing.handler.AbstractProcessingHandler.handle(AbstractProcessingHandler.java:126)
-	at com.yahoo.container.jdisc.ThreadedHttpRequestHandler.handleRequest(ThreadedHttpRequestHandler.java:87)
-	at com.yahoo.container.jdisc.ThreadedRequestHandler$RequestTask.processRequest(ThreadedRequestHandler.java:191)
-	at com.yahoo.container.jdisc.ThreadedRequestHandler$RequestTask.run(ThreadedRequestHandler.java:185)
-	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
-	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
-	at java.base/java.lang.Thread.run(Thread.java:840)\n
-```
+## Overall setup
 
-Adding `<scope>compile</scope>` to pom.xml to the GraalPy dependencies doesn't help.
+In the `Dockerfile` we have to create a directory with the GraalPy dependencies.
+This directory must be referenced in the `services.xml` file under `classpath_extra` tag.
+The Python code should be added under the `resources/org.graalvm.python.vfs/` directory.
+In a Java class add code to run the Python code as per GraalPy examples.
 
-When `scope=provided` then class cannot be found:
-```text
-[2024-12-20 11:08:52.965] ERROR   container        Container.com.yahoo.protect.Process	java.lang.Error handling request\nexception=\njava.lang.NoClassDefFoundError: org/graalvm/polyglot/Context
-	at ai.vespa.examples.ExampleProcessor.process(ExampleProcessor.java:37)
-	at com.yahoo.processing.execution.Execution.process(Execution.java:112)
-	at com.yahoo.processing.handler.AbstractProcessingHandler.handle(AbstractProcessingHandler.java:126)
-	at com.yahoo.container.jdisc.ThreadedHttpRequestHandler.handleRequest(ThreadedHttpRequestHandler.java:87)
-	at com.yahoo.container.jdisc.ThreadedRequestHandler$RequestTask.processRequest(ThreadedRequestHandler.java:191)
-	at com.yahoo.container.jdisc.ThreadedRequestHandler$RequestTask.run(ThreadedRequestHandler.java:185)
-	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
-	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
-	at java.base/java.lang.Thread.run(Thread.java:840)\nCaused by: java.lang.ClassNotFoundException: org.graalvm.polyglot.Context not found by generic-request-processing [31]
-	at org.apache.felix.framework.BundleWiringImpl.findClassOrResourceByDelegation(BundleWiringImpl.java:1591)
-	at org.apache.felix.framework.BundleWiringImpl.access$300(BundleWiringImpl.java:79)
-	at org.apache.felix.framework.BundleWiringImpl$BundleClassLoader.loadClass(BundleWiringImpl.java:1976)
-	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
-	... 9 more
-```
+## Future work
 
-After adding jars to the container directly:
-```text
-
-[2024-12-20 21:54:03.460] ERROR   container        Container.com.yahoo.protect.Process	java.lang.Error handling request\nexception=\njava.lang.InternalError: java.lang.reflect.InvocationTargetException
-	at com.oracle.truffle.runtime.ModulesSupport.loadModulesSupportLibrary(ModulesSupport.java:170)
-	at com.oracle.truffle.runtime.ModulesSupport.<clinit>(ModulesSupport.java:59)
-	at com.oracle.truffle.runtime.hotspot.HotSpotTruffleRuntimeAccess.createRuntime(HotSpotTruffleRuntimeAccess.java:84)
-	at com.oracle.truffle.runtime.hotspot.HotSpotTruffleRuntimeAccess.getRuntime(HotSpotTruffleRuntimeAccess.java:75)
-	at com.oracle.truffle.api.Truffle.createRuntime(Truffle.java:145)
-	at com.oracle.truffle.api.Truffle$1.run(Truffle.java:176)
-	at com.oracle.truffle.api.Truffle$1.run(Truffle.java:174)
-	at java.base/java.security.AccessController.doPrivileged(AccessController.java:318)
-	at com.oracle.truffle.api.Truffle.initRuntime(Truffle.java:174)
-	at com.oracle.truffle.api.Truffle.<clinit>(Truffle.java:63)
-	at com.oracle.truffle.runtime.enterprise.EnterpriseTruffle.supportsEnterpriseExtensions(stripped:22)
-	at com.oracle.truffle.polyglot.enterprise.EnterprisePolyglotImpl.getPriority(stripped:551)
-	at java.base/java.util.Comparator.lambda$comparing$77a9974f$1(Comparator.java:473)
-	at java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:355)
-	at java.base/java.util.TimSort.sort(TimSort.java:220)
-	at java.base/java.util.Arrays.sort(Arrays.java:1307)
-	at java.base/java.util.ArrayList.sort(ArrayList.java:1721)
-	at java.base/java.util.Collections.sort(Collections.java:179)
-	at org.graalvm.polyglot.Engine.loadAndValidateProviders(Engine.java:1641)
-	at org.graalvm.polyglot.Engine$1.run(Engine.java:1717)
-	at org.graalvm.polyglot.Engine$1.run(Engine.java:1712)
-	at java.base/java.security.AccessController.doPrivileged(AccessController.java:318)
-	at org.graalvm.polyglot.Engine.initEngineImpl(Engine.java:1712)
-	at org.graalvm.polyglot.Engine$ImplHolder.<clinit>(Engine.java:170)
-	at org.graalvm.polyglot.Engine.getImpl(Engine.java:422)
-	at org.graalvm.polyglot.Engine$Builder.build(Engine.java:724)
-	at org.graalvm.polyglot.Context$Builder.build(Context.java:1925)
-	at org.graalvm.polyglot.Context.create(Context.java:979)
-	at ai.vespa.examples.ExampleProcessor.process(ExampleProcessor.java:37)
-	at com.yahoo.processing.execution.Execution.process(Execution.java:112)
-	at com.yahoo.processing.handler.AbstractProcessingHandler.handle(AbstractProcessingHandler.java:126)
-	at com.yahoo.container.jdisc.ThreadedHttpRequestHandler.handleRequest(ThreadedHttpRequestHandler.java:87)
-	at com.yahoo.container.jdisc.ThreadedRequestHandler$RequestTask.processRequest(ThreadedRequestHandler.java:191)
-	at com.yahoo.container.jdisc.ThreadedRequestHandler$RequestTask.run(ThreadedRequestHandler.java:185)
-	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
-	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
-	at java.base/java.lang.Thread.run(Thread.java:840)\nCaused by: java.lang.reflect.InvocationTargetException
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
-	at com.oracle.truffle.runtime.ModulesSupport.loadModulesSupportLibrary(ModulesSupport.java:163)
-	... 36 more\nCaused by: java.nio.file.AccessDeniedException: /opt/vespa/.cache
-	at java.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:90)
-	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:106)
-	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111)
-	at java.base/sun.nio.fs.UnixFileSystemProvider.createDirectory(UnixFileSystemProvider.java:397)
-	at java.base/java.nio.file.Files.createDirectory(Files.java:700)
-	at java.base/java.nio.file.Files.createAndCheckIsDirectory(Files.java:807)
-	at java.base/java.nio.file.Files.createDirectories(Files.java:793)
-	at com.oracle.truffle.polyglot.InternalResourceCache.installResource(InternalResourceCache.java:233)
-	at com.oracle.truffle.polyglot.InternalResourceCache.installRuntimeResource(InternalResourceCache.java:190)
-	... 41 more\n
-```
-
-Overall follow the guidelines from [here](https://docs.vespa.ai/en/components/bundles.html#add-jni-code-to-global-classpath):
-- Create a separate directory for graalpy dependencies.
-```shell
-docker exec -it -u root vespa mkdir /opt/vespa/lib/graalpy
-docker exec -it -u root vespa chown vespa /opt/vespa/lib/graalpy
-```
-- Copy all the jars from VAP `dependencies` dir to the container.
-
-```shell
-docker cp ~/.m2/repository/org/graalvm/python/python-language/24.1.1/python-language-24.1.1.jar vespa:/opt/vespa/lib/graalpy
-docker cp dependencies/bcpkix-jdk18on-1.78.1.jar vespa:/opt/vespa/lib/graalpy
-docker cp dependencies/bcutil-jdk18on-1.78.1.jar vespa:/opt/vespa/lib/graalpy
-docker cp dependencies/collections-24.1.1.jar vespa:/opt/vespa/lib/graalpy
-docker cp dependencies/icu4j-24.1.1.jar vespa:/opt/vespa/lib/graalpy
-docker cp dependencies/jniutils-24.1.1.jar vespa:/opt/vespa/lib/graalpy
-docker cp dependencies/json-24.1.1.jar vespa:/opt/vespa/lib/graalpy
-docker cp dependencies/llvm-api-24.1.1.jar vespa:/opt/vespa/lib/graalpy
-docker cp dependencies/nativebridge-24.1.1.jar vespa:/opt/vespa/lib/graalpy
-docker cp dependencies/nativeimage-24.1.1.jar vespa:/opt/vespa/lib/graalpy
-docker cp dependencies/polyglot-24.1.1.jar vespa:/opt/vespa/lib/graalpy
-docker cp dependencies/profiler-tool-24.1.1.jar vespa:/opt/vespa/lib/graalpy
-docker cp dependencies/truffle-nfi-24.1.1.jar vespa:/opt/vespa/lib/graalpy
-docker cp dependencies/truffle-nfi-libffi-24.1.1.jar vespa:/opt/vespa/lib/graalpy
-docker cp dependencies/truffle-runtime-24.1.1.jar vespa:/opt/vespa/lib/graalpy
-docker cp dependencies/word-24.1.1.jar vespa:/opt/vespa/lib/graalpy
-docker cp dependencies/xz-24.1.1.jar vespa:/opt/vespa/lib/graalpy
-docker cp dependencies/python-resources-24.1.1.jar vespa:/opt/vespa/lib/graalpy
-docker cp dependencies/regex-24.1.1.jar vespa:/opt/vespa/lib/graalpy
-docker cp dependencies/truffle-api-24.1.1.jar vespa:/opt/vespa/lib/graalpy
-docker cp dependencies/truffle-compiler-24.1.1.jar vespa:/opt/vespa/lib/graalpy
-docker cp dependencies/truffle-enterprise-24.1.1.jar vespa:/opt/vespa/lib/graalpy
-```
-
-- Make sure that vespa user has read rights.
-- Create a dir `docker exec -it -u root vespa mkdir /opt/vespa/.cache` and `docker exec -it -u root vespa chown vespa /opt/vespa/.cache`.
-- Restart container `docker exec -it vespa sh -c "/opt/vespa/bin/vespa-stop-services && /opt/vespa/bin/vespa-start-services"`
-
-And it works!!!!!
-
-Here are all dependencies needed for graalvm refactored so that they are included in the VAP.
-```xml
-        <dependency>
-            <groupId>org.graalvm.python</groupId>
-            <artifactId>python</artifactId>
-            <version>24.1.1</version>
-            <type>pom</type>
-        </dependency>
-        <dependency>
-            <groupId>org.graalvm.python</groupId>
-            <artifactId>python-language</artifactId>
-            <version>24.1.1</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.graalvm.python</groupId>
-            <artifactId>python-community</artifactId>
-            <version>24.1.1</version>
-            <type>pom</type>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.graalvm.truffle</groupId>
-            <artifactId>truffle-runtime</artifactId>
-            <version>24.1.1</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.graalvm.truffle</groupId>
-            <artifactId>truffle-enterprise</artifactId>
-            <version>24.1.1</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.graalvm.python</groupId>
-            <artifactId>python-resources</artifactId>
-            <version>24.1.1</version>
-            <scope>compile</scope>
-        </dependency>
-```
-
-TODO:
 - [ ] minimize the dependencies list (now 193 MB)
 - [ ] How to give the request/response objects for python
-- [ ] How to run python scripts from files
-- [ ] Add some dependencies
-
-# Vespa sample applications - a generic request-response processing application
-
-A simple stateless Vespa application demonstrating general composable request-response processing with Vespa.
-No content cluster is configured just a stateless Java container.
-A custom config class is created and used to control the processing component.
-
-Refer to [getting started](https://docs.vespa.ai/en/getting-started.html) for more information.
-
-
-### Executable example
-
-**Validate environment, should be minimum 4G:**
-
-Refer to [Docker memory](https://docs.vespa.ai/en/operations-selfhosted/docker-containers.html#memory)
-for details and troubleshooting:
-<pre>
-$ docker info | grep "Total Memory"
-or
-$ podman info | grep "memTotal"
-</pre>
-
-**Check-out, compile and run:**
-<pre data-test="exec">
-$ git clone --depth 1 https://github.com/vespa-engine/sample-apps.git
-$ cd sample-apps/examples/generic-request-processing &amp;&amp; mvn clean package
-$ docker run --detach --name vespa --hostname vespa-container \
-  --publish 127.0.0.1:8080:8080 --publish 127.0.0.1:19071:19071 \
-  vespaengine/vespa
-</pre>
-
-**Wait for the configserver to start:**
-<pre data-test="exec" data-test-wait-for="200 OK">
-$ curl -s --head http://localhost:19071/ApplicationStatus
-</pre>
-
-**Deploy the application:**
-<pre data-test="exec" data-test-assert-contains="prepared and activated.">
-$ curl --header Content-Type:application/zip --data-binary @target/application.zip \
-  localhost:19071/application/v2/tenant/default/prepareandactivate
-</pre>
-
-**Wait for the application to start:**
-<pre data-test="exec" data-test-wait-for="200 OK">
-$ curl -s --head http://localhost:8080/ApplicationStatus
-</pre>
-
-**Test the application:**
-<pre data-test="exec" data-test-assert-contains="Hello, services!">
-$ curl -s http://localhost:8080/processing/
-</pre>
-
-**Shutdown and remove the container:**
-<pre data-test="after">
-$ docker rm -f vespa
-</pre>
+- [ ] Add a Python library that has native extensions
+- [ ] Resource pool for the Python component as it is single [threaded](https://github.com/oracle/graalpython/blob/08eaa6f1c4328a77b445792e1e70f98b129fe3d2/docs/contributor/IMPLEMENTATION_DETAILS.md?plain=1#L143)
